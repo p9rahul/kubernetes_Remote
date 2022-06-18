@@ -1,7 +1,5 @@
 ***************#48 Installation of Minikube*******************
 $ sudo su
-$ apt-get update
-$apt-get install docker.io
 $sudo apt update && apt -y install docker.io
 #Download package kubectl(CLI) to run & install Minikube
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
@@ -12,11 +10,11 @@ apt install conntrack #minikube dependecy is that as a contract we can run minik
 $minikube start --vm-driver=none  #no need any driver as of now
 $minikube status
 $minikube version 
-$kubectl get nodes 
-$kubectl describe node 
+$kubectl get nodes  #pod will have seprate IP from Node 
+$kubectl describe node #brife description like start, update node, start kubelet
 $kubectl describe node <ip:copy name from get nodes> #suppose you have 10 ip and want to see a specific one
 
-#Single CONTAINER POD ENVIRONMENT pod1.yml
+#Single CONTAINER POD ENVIRONMENT pod1.yml (create a folder like mykub
 
 kind: Pod                              
 apiVersion: v1                     
@@ -34,12 +32,13 @@ spec:
 kubectl apply -f pod1.yml
 kubectl get pods -o wide #where POD is created, details  IP
 kubectl describe pod <pod_name> #more details
-kubectl logs -f <pod_name> #-c <container_name> if multiple
-kubectl delete pod <pod_name> or kubectl delete -f pod1.yml
-kubectl exec <pod_name> -c <con_name> –hostname -i #To see POD IP
+kubectl logs -f <pod_name> #-c <container_name> if multiple , it will display the log print Hello-Rahul
+kubectl exec <pod_name> -c <con_name> –-hostname -i #To see POD IP
+ example- kubectl exec testpod1 -c c00 -- hostname -i # will return host IP address
 kubectl exec <pod_name> -it -c <con_name> -- /bin/bash #Goto inside the pod container
+   example- kubectl exec testpod1 -it -c c00 -- /bin/bash
 ps  or ps -ef
-
+kubectl delete pod <pod_name> or kubectl delete -f pod1.yml (-f for file)
  
 #MULTI CONTAINER POD ENVIRONMENT pod2.yml
 
@@ -56,6 +55,8 @@ spec:
       image: ubuntu
       command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
+kubectl logs -f testpod2 -c c00
+kubectl logs -f testpod2 -c c01
 
 #POD ENVIRONMENT  VARIABLES pod3.yml
 
@@ -73,7 +74,7 @@ spec:
         value: Rahul
 
 
-#Go inside container $kubectl exec <pod_name> -it - - /bin/bash 
+$kubectl exec <pod_name> -it - - /bin/bash  #Go inside container
 $env
 $echo $MYNAME
 
@@ -88,9 +89,12 @@ spec:
     - name: c00
       image: httpd
       ports:
-       - containerPort: 80  
+       - containerPort: 80
 	   
 check port expose -see video 
+kubectl get pods -o wide
+curl IP:80
+-not working on browser
 
 ******************YAML Files used in demo*************************
 49. Labels,Selectors,Replication-Controller and replica-set in Kubernetes
@@ -100,9 +104,9 @@ check port expose -see video
 kind: Pod
 apiVersion: v1
 metadata:
-  name: delhipod
-  labels:                                                   
-    env: development
+  name: testpod5
+  labels:
+    env: dev
     class: pods
 spec:
     containers:
@@ -110,9 +114,10 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
-$kubectl get pods -- show-labels 
-$kubectl get pods -l env=QA (this is called selector select env is QA)
-$kubectl delete pod -l env=QA
+$kubectl get pods --show-labels 
+$kubectl get pods -l env=dev (this is called selector select env is dev)
+kubectl get pods -l 'env in(dev,QA)' or kubectl get pods -l 'env notin(dev,QA)' or 
+$kubectl delete pod -l env=dev  
 $kubectl get pods
 
 # NODE SELECTOR EXAMPLE pod6.yml
@@ -120,31 +125,39 @@ $kubectl get pods
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nodelabels
+  name: testpod6
   labels:
-    env: development
+    env: dev
 spec:
     containers:
        - name: c00
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
-    nodeSelector:                                         
-       hardware: t2-medium
+    nodeSelector:
+       hardware: t2-micro # need to change node though impative command
+       
+kubectl get pods
+kubectl get nodes
+kubectl describe pod <pod_name>
+kubectl label nodes ip-name hardware=t2-medium
+kubectl get pods
+
+
 
 #EXAMPLE OF REPLICATION CONTROLLER rc1.yml
 
-kind: ReplicationController               
+kind: ReplicationController
 apiVersion: v1
 metadata:
   name: myreplica
 spec:
-  replicas: 2            
-  selector:        
-    myname: Rahul Rajput                             
-  template:                
+  replicas: 5
+  selector:
+    myname: Rahul
+  template:
     metadata:
       name: testpod6
-      labels:            
+      labels:
         myname: Rahul
     spec:
      containers:
@@ -152,25 +165,37 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
-kubectl scale -- replicas=8 rc -l myname=Rahul
+kubectl describe rc <name>
+kubectl get pods 
+kubectl delete pod <name>
+kubectl get pods  #again 2 will display, it will create with new IP
+kubectl get rc
+        NAME        DESIRED   CURRENT   READY   AGE
+        myreplica   2         2         2       7m19s
+kubectl describe rc <name>
+kubectl get pods --show-labels
+        NAME              READY   STATUS    RESTARTS   AGE     LABELS
+        myreplica-4k8lh   1/1     Running   0          2m20s   myname=Rahul
+        myreplica-vv4rk   1/1     Running   0          8m57s   myname=Rahul
+kubectl scale --replicas=8 rc -l myname=Rahul
 
 
 # EXAMPLE OF REPLICA SET rs1.yml
 
-kind: ReplicaSet                                    
-apiVersion: apps/v1                            
+kind: ReplicaSet
+apiVersion: apps/v1
 metadata:
   name: myrs
 spec:
-  replicas: 2  
-  selector:                  
+  replicas: 5
+  selector:
     matchExpressions:                             # these must match the labels
       - {key: myname, operator: In, values: [Rahul, Rakesh, Rajesh]}
       - {key: env, operator: NotIn, values: [production]}
-  template:      
+  template:
     metadata:
       name: testpod7
-      labels:              
+      labels:
         myname: Rahul
     spec:
      containers:
@@ -178,9 +203,11 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5 ; done"]
 
-Scale down - kubectl scale - - replicas=1 rs/myrs #scale down
+kubectl scale --replicas=1 rs/myrs #scale down
 kubectl get pods
 kubectl get rs
+        NAME   DESIRED   CURRENT   READY   AGE
+        myrs   10        10        10      2m39s
 kubectl delete pod  <podname> #delete and check
 kubectl get rs
 kubectl get pods
@@ -191,9 +218,9 @@ kubectl get pods
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-   name: mydeployments
+   name: mydeploy
 spec:
-   replicas: 2
+   replicas: 5
    selector:     
     matchLabels:
      name: deployment
@@ -209,11 +236,20 @@ spec:
           command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5; done"]
 
 kubectl get deploy
+    NAME       READY   UP-TO-DATE   AVAILABLE   AGE
+    mydeploy   5/5     5            5           22s
 kubectl describe deploy <name>
 kubectl get rs
+    NAME                  DESIRED   CURRENT   READY   AGE
+    mydeploy-5649b49db7   5         5         5       97s
+kubectl delete pod <name_form node>
 kubectl scale --replicas=1 deploy <name> #scale down 
-kubectl logs -f <pod_name> #-what is running inside the pod
+kubectl logs -f <name_pod> #-what is running inside the pod
+# change someting in file 
 kubectl rollout status deployment <name>
 kubectl rollout history deployment <name>
-kubectl rollout undo deployment <name>
-kubectl
+    REVISION  CHANGE-CAUSE
+    1         <none> 
+    2         <none>
+kubectl rollout undo deployment mydeploy<name>
+kubectl logs -f <name_pod>
