@@ -1,10 +1,29 @@
 ***************#48 Installation of Minikube*******************
+$ sudo su
+$ apt-get update
+$apt-get install docker.io
+$sudo apt update && apt -y install docker.io
+#Download package kubectl(CLI) to run & install Minikube
+curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+
+apt install conntrack #minikube dependecy is that as a contract we can run minikube commands
+$minikube start --vm-driver=none  #no need any driver as of now
+$minikube status
+$minikube version 
+$kubectl get nodes 
+$kubectl describe node 
+$kubectl describe node <ip:copy name from get nodes> #suppose you have 10 ip and want to see a specific one
+
 #Single CONTAINER POD ENVIRONMENT pod1.yml
 
 kind: Pod                              
 apiVersion: v1                     
 metadata:                           
-  name: testpod1               
+  name: testpod1
+  annotations:
+   description: My first pod 
 spec:                                    
   containers:                      
     - name: c00                     
@@ -13,7 +32,15 @@ spec:
   restartPolicy: Never         # Defaults to Always
 
 kubectl apply -f pod1.yml
+kubectl get pods -o wide #where POD is created, details  IP
+kubectl describe pod <pod_name> #more details
+kubectl logs -f <pod_name> #-c <container_name> if multiple
+kubectl delete pod <pod_name> or kubectl delete -f pod1.yml
+kubectl exec <pod_name> -c <con_name> –hostname -i #To see POD IP
+kubectl exec <pod_name> -it -c <con_name> -- /bin/bash #Goto inside the pod container
+ps  or ps -ef
 
+ 
 #MULTI CONTAINER POD ENVIRONMENT pod2.yml
 
 kind: Pod
@@ -45,7 +72,12 @@ spec:
       - name: MYNAME
         value: Rahul
 
-#POD WITH PORTS pod4.yml
+
+#Go inside container $kubectl exec <pod_name> -it - - /bin/bash 
+$env
+$echo $MYNAME
+
+#POD WITH PORTS(How to expose ports inside the POD) pod4.yml
 
 kind: Pod
 apiVersion: v1
@@ -58,6 +90,7 @@ spec:
       ports:
        - containerPort: 80  
 	   
+check port expose -see video 
 
 ******************YAML Files used in demo*************************
 49. Labels,Selectors,Replication-Controller and replica-set in Kubernetes
@@ -77,6 +110,10 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
+$kubectl get pods -- show-labels 
+$kubectl get pods -l env=QA (this is called selector select env is QA)
+$kubectl delete pod -l env=QA
+$kubectl get pods
 
 # NODE SELECTOR EXAMPLE pod6.yml
 
@@ -115,6 +152,8 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
+kubectl scale -- replicas=8 rc -l myname=Rahul
+
 
 # EXAMPLE OF REPLICA SET rs1.yml
 
@@ -138,7 +177,14 @@ spec:
        - name: c00
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5 ; done"]
-		 
+
+Scale down - kubectl scale - - replicas=1 rs/myrs #scale down
+kubectl get pods
+kubectl get rs
+kubectl delete pod  <podname> #delete and check
+kubectl get rs
+kubectl get pods
+
 50. Deployment Object in Kubernetes-
 #deploy1.yml
 
@@ -161,3 +207,13 @@ spec:
         - name: c00
           image: ubuntu
           command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5; done"]
+
+kubectl get deploy
+kubectl describe deploy <name>
+kubectl get rs
+kubectl scale --replicas=1 deploy <name> #scale down 
+kubectl logs -f <pod_name> #-what is running inside the pod
+kubectl rollout status deployment <name>
+kubectl rollout history deployment <name>
+kubectl rollout undo deployment <name>
+kubectl
