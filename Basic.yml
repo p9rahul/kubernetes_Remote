@@ -14,6 +14,8 @@ $kubectl get nodes  #pod will have seprate IP from Node
 $kubectl describe node #brife description like start, update node, start kubelet
 $kubectl describe node <ip:copy name from get nodes> #suppose you have 10 ip and want to see a specific one
 
+
+**************************************************************************************
 #Single CONTAINER POD ENVIRONMENT pod1.yml (create a folder like mykub
 
 kind: Pod                              
@@ -29,17 +31,18 @@ spec:
       command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
   restartPolicy: Never         # Defaults to Always
 
-kubectl apply -f pod1.yml
-kubectl get pods -o wide #where POD is created, details  IP
-kubectl describe pod <pod_name> #more details
-kubectl logs -f <pod_name> #-c <container_name> if multiple , it will display the log print Hello-Rahul
-kubectl exec <pod_name> -c <con_name> –-hostname -i #To see POD IP
- example- kubectl exec testpod1 -c c00 -- hostname -i # will return host IP address
-kubectl exec <pod_name> -it -c <con_name> -- /bin/bash #Goto inside the pod container
-   example- kubectl exec testpod1 -it -c c00 -- /bin/bash
-ps  or ps -ef
-kubectl delete pod <pod_name> or kubectl delete -f pod1.yml (-f for file)
- 
+$kubectl apply -f pod1.yml
+$kubectl get pods -o wide #where POD is created, details  IP
+$kubectl describe pod <pod_name> #more details
+$kubectl logs -f <pod_name> #-c <container_name> if multiple , it will display the log print Hello-Rahul
+$kubectl exec <pod_name> -c <con_name> –-hostname -i #To see POD IP
+    example- kubectl exec testpod1 -c c00 -- hostname -i # will return host IP address
+$kubectl exec <pod_name> -it -c <con_name> -- /bin/bash #Goto inside the pod container
+    example- kubectl exec testpod1 -it -c c00 -- /bin/bash
+$ps  or ps -ef
+$kubectl delete pod <pod_name> or kubectl delete -f pod1.yml (-f for file)
+
+**************************************************************************************
 #MULTI CONTAINER POD ENVIRONMENT pod2.yml
 
 kind: Pod
@@ -55,9 +58,10 @@ spec:
       image: ubuntu
       command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
-kubectl logs -f testpod2 -c c00
-kubectl logs -f testpod2 -c c01
+$kubectl logs -f testpod2 -c c00
+$kubectl logs -f testpod2 -c c01
 
+**************************************************************************************
 #POD ENVIRONMENT  VARIABLES pod3.yml
 
 kind: Pod
@@ -78,6 +82,7 @@ $kubectl exec <pod_name> -it - - /bin/bash  #Go inside container
 $env
 $echo $MYNAME
 
+**************************************************************************************
 #POD WITH PORTS(How to expose ports inside the POD) pod4.yml
 
 kind: Pod
@@ -91,10 +96,10 @@ spec:
       ports:
        - containerPort: 80
 	   
-check port expose -see video 
-kubectl get pods -o wide
-curl IP:80
--not working on browser
+
+- not working on browser Because K8s will not allow for outside world
+$kubectl get pods -o wide
+$curl IP:80
 
 ******************YAML Files used in demo*************************
 49. Labels,Selectors,Replication-Controller and replica-set in Kubernetes
@@ -120,6 +125,7 @@ kubectl get pods -l 'env in(dev,QA)' or kubectl get pods -l 'env notin(dev,QA)' 
 $kubectl delete pod -l env=dev  
 $kubectl get pods
 
+**************************************************************************************
 # NODE SELECTOR EXAMPLE pod6.yml
 
 kind: Pod
@@ -143,7 +149,7 @@ kubectl label nodes ip-name hardware=t2-medium
 kubectl get pods
 
 
-
+**************************************************************************************
 #EXAMPLE OF REPLICATION CONTROLLER rc1.yml
 
 kind: ReplicationController
@@ -165,21 +171,21 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Hello-Rahul; sleep 5 ; done"]
 
-kubectl describe rc <name>
-kubectl get pods 
-kubectl delete pod <name>
-kubectl get pods  #again 2 will display, it will create with new IP
-kubectl get rc
+$kubectl describe rc <name>
+$kubectl get pods 
+$kubectl delete pod <name>
+$kubectl get pods  #again 2 will display, it will create with new IP
+$kubectl get rc
         NAME        DESIRED   CURRENT   READY   AGE
         myreplica   2         2         2       7m19s
-kubectl describe rc <name>
-kubectl get pods --show-labels
+$kubectl describe rc <name>
+$kubectl get pods --show-labels
         NAME              READY   STATUS    RESTARTS   AGE     LABELS
         myreplica-4k8lh   1/1     Running   0          2m20s   myname=Rahul
         myreplica-vv4rk   1/1     Running   0          8m57s   myname=Rahul
-kubectl scale --replicas=8 rc -l myname=Rahul
+$kubectl scale --replicas=8 rc -l myname=Rahul
 
-
+**************************************************************************************
 # EXAMPLE OF REPLICA SET rs1.yml
 
 kind: ReplicaSet
@@ -203,15 +209,16 @@ spec:
          image: ubuntu
          command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5 ; done"]
 
-kubectl scale --replicas=1 rs/myrs #scale down
-kubectl get pods
-kubectl get rs
+$kubectl scale --replicas=1 rs/myrs #scale down
+$kubectl get pods
+$kubectl get rs
         NAME   DESIRED   CURRENT   READY   AGE
         myrs   10        10        10      2m39s
-kubectl delete pod  <podname> #delete and check
-kubectl get rs
-kubectl get pods
+$kubectl delete pod  <podname> #delete and check
+$kubectl get rs
+$kubectl get pods
 
+**************************************************************************************
 50. Deployment Object in Kubernetes-
 #deploy1.yml
 
@@ -235,21 +242,287 @@ spec:
           image: ubuntu
           command: ["/bin/bash", "-c", "while true; do echo Pandey world; sleep 5; done"]
 
-kubectl get deploy
+$apply
+$kubectl get deploy
     NAME       READY   UP-TO-DATE   AVAILABLE   AGE
     mydeploy   5/5     5            5           22s
-kubectl describe deploy <name>
-kubectl get rs
+$kubectl describe deploy <name>
+$kubectl get rs
     NAME                  DESIRED   CURRENT   READY   AGE
     mydeploy-5649b49db7   5         5         5       97s
-kubectl delete pod <name_form node>
-kubectl scale --replicas=1 deploy <name> #scale down 
-kubectl logs -f <name_pod> #-what is running inside the pod
-# change someting in file 
-kubectl rollout status deployment <name>
-kubectl rollout history deployment <name>
+$kubectl delete pod <name_form node>
+$kubectl scale --replicas=1 deploy <name> #scale down 
+$kubectl logs -f <name_pod> #-what is running inside the pod
+# change something in file and deploy again 
+$kubectl rollout status deployment <name>
+$kubectl rollout history deployment <name>
     REVISION  CHANGE-CAUSE
     1         <none> 
     2         <none>
-kubectl rollout undo deployment mydeploy<name>
-kubectl logs -f <name_pod>
+$kubectl rollout undo deployment <name>
+$kubectl logs -f <name_pod>
+
+**************************************************************************************
+KUBERNETES NETWORKING
+**************************************************************************************
+# Container to container communication on same POD 
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpod
+spec:
+  containers:
+    - name: c00
+      image: ubuntu
+      command: ["/bin/bash", "-c", "while true; do echo Hello-Bhupinder; sleep 5 ; done"]
+    - name: c01
+      image: httpd
+      ports:
+       - containerPort: 80
+	   
+	   
+$kubectl apply -f pod1.yml
+$kubectl get pods -o wide -see how many container running
+$kubectl exex name -it -c coo -- /bin/bash #Go inside the 1st container and ping 2nd 
+$curl locahost:80
+
+#POD to POD Communicate in same node -> create 2 POD #pod2.yml
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpod1
+spec:
+  containers:
+    - name: c01
+      image: nginx
+      ports:
+       - containerPort: 80
+	   
+#pod3.yml	   
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpod2
+spec:
+  containers:
+    - name: c02
+      image: httpd
+      ports:
+       - containerPort: 80
+
+$kubectl apply -f pod12,3.yml
+$kubectl get pods -o wide
+$kubectl IP1:80
+$kubectl IP2:80  #otherwise we can go inside 1st one and talk to 2nd one
+
+**************************************************************************************
+Service object :- need to create 2 files deploy and service
+#deployService.yml
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+   name: mydeployments
+spec:
+   replicas: 1
+   selector:      # tells the controller which pods to watch/belong to
+    matchLabels:
+     name: deployment
+   template:
+     metadata:
+       name: testpod1
+       labels:
+         name: deployment
+     spec:
+      containers:
+        - name: c00
+          image: httpd
+          ports:
+          - containerPort: 80
+		  
+$kubectl apply -f deployService.yml
+$kubectl get pods -o wide
+$curl IP:80
+====================
+#service1.yml 
+====================
+
+kind: Service                             # Defines to create Service type Object
+apiVersion: v1
+metadata:
+  name: demoservice
+spec:
+  ports:
+    - port: 80                               # Containers port exposed
+      targetPort: 80                     # Pods port
+  selector:
+    name: deployment                    # Apply this service to any pods which has the specific label
+  type: ClusterIP#NodePort                       # Specifies the service type i.e ClusterIP or NodePort
+
+
+$kubectl apply -f service1.yml
+$kubectl get svc  #see static service
+$curl IP:80 
+#now delete the POD ,We are using RS so new POD will be created and access same Virtual IP, new POD will doesn't matter
+$curl IP:80
+#NodePort - access through browser - copy AWS dns:31341
+$kubectl apply -f service1.yml
+$kubectl get svc
+
+
+**************************************************************************************
+===========================
+volume labs 1. emptydir
+===========================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myvolemptydir
+spec:
+  containers:
+  - name: c1
+    image: centos
+    command: ["/bin/bash", "-c", "sleep 15000"]
+    volumeMounts:                                    # Mount definition inside the container
+      - name: xchange   #volume name should be same for both container
+        mountPath: "/tmp/xchange"          
+  - name: c2
+    image: centos
+    command: ["/bin/bash", "-c", "sleep 10000"]
+    volumeMounts:
+      - name: xchange	#volume name should be same for both container
+        mountPath: "/tmp/data"
+  volumes:                                                   
+  - name: xchange
+    emptyDir: {}
+
+Here for both container mount path is different 
+Apply , get pods
+Go inside the 1st container $kubectl exec name -c c1 -it  -- /bin/bash
+Cd /tmp -> xchange -> make 1 file -> write something -> exit
+Go inside 2nd container cd tmp - cd data -ls - we can see file created in C1
+
+========================
+volume labs . HOST PATH
+========================
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myvolhostpath
+spec:
+  containers:
+  - image: centos
+    name: testc
+    command: ["/bin/bash", "-c", "sleep 15000"]
+    volumeMounts:
+    - mountPath: /tmp/hostpath
+      name: testvolume
+  volumes:
+  - name: testvolume
+    hostPath:
+      path: /tmp/data
+
+$apply and goinside the container write something and check on host level 
+
+=================================
+PERSISTENT VOLUME - 3 manifest files would required 
+================================
+1) mypv.yml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: myebsvol
+spec:
+  capacity:
+    storage: 1Gi	#In EBS 20GB but taking 1GB
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  awsElasticBlockStore:
+    volumeID:           # YAHAN APNI EBS VOLUME ID DAALO
+    fsType: ext4		#in azure fsType would be different 
+	
+	
+$kubectl apply -f mypv.yml
+$kubectl get pv
+
+============
+2)mypvc.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myebsvolclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+	  
+$kubectl apply -f mypvc.yml
+$kubectl get pvc
+Volume is bouned but where to use
+Create deployment file -> for replica
+============
+3) deployPOD.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvdeploy
+spec:
+  replicas: 1
+  selector:      # tells the controller which pods to watch/belong to
+    matchLabels:
+     app: mypvLabel
+  template:
+    metadata:
+      labels:
+        app: mypvLabel
+    spec:
+      containers:
+      - name: shell
+        image: centos
+        command: ["bin/bash", "-c", "sleep 10000"]
+        volumeMounts:
+        - name: mypd
+          mountPath: "/tmp/persistent"
+      volumes:
+        - name: mypd
+          persistentVolumeClaim:
+            claimName: myebsvolclaim  #this will from 2nd claim
+			
+$kubectl apply -f deployPOD.yml
+$kubectl get deploy
+$kubectl get rs
+$kubectl get pods
+goinside the container /tmp/persistent
+#create some files and check 
+===========================================================================
+HEALTHCHECK/LIVENESSPROBE
+===========================================================================
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: mylivenessprobe
+spec:
+  containers:
+  - name: liveness
+    image: ubuntu
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 1000
+    livenessProbe:                                          
+      exec:
+        command:                                         
+        - cat                
+        - /tmp/healthy
+      initialDelaySeconds: 5          
+      periodSeconds: 5                     #after every 5 secons readyness will be check            
+      timeoutSeconds: 30                              
+----------------------------------------
